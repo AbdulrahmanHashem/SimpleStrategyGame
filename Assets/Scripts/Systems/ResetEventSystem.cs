@@ -2,7 +2,7 @@ using Unity.Burst;
 using Unity.Entities;
 
 [UpdateInGroup(typeof(LateSimulationSystemGroup))]
-partial struct RestEventSystem : ISystem
+partial struct ResetEventSystem : ISystem
 {
     [BurstCompile]
     public void OnUpdate(ref SystemState state)

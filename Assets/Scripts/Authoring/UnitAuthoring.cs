@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class UnitAuthoring : MonoBehaviour
 {
-
+    
 }
 
 public class UnitAuthoringBaker : Baker<UnitAuthoring>

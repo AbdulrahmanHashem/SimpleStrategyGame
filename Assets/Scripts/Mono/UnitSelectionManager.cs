@@ -6,7 +6,6 @@ using Unity.Physics;
 using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using RaycastHit = UnityEngine.RaycastHit;
 
 public class UnitSelectionManager : MonoBehaviour
 {
@@ -39,35 +38,15 @@ public class UnitSelectionManager : MonoBehaviour
         MouseWorldPosition.Instance.PlayerInputActions.Player.MousePosition.performed += MousePositionChangePerformed;
     }
     
-    void MousePositionChangePerformed(InputAction.CallbackContext context)
-    {
-        _mousePosition = context.ReadValue<Vector2>();
-    }
-    
-    private void DeselectAll()
-    {
-        // Deselect All
-        EntityQuery entityQuery = new EntityQueryBuilder(Allocator.Temp)
-            .WithAll<Selected>()
-            .Build(_entityManager);
-
-        NativeArray<Entity> selectedEntities = entityQuery.ToEntityArray(Allocator.Temp);
-        NativeArray<Selected> entitiesSelectedComponents = entityQuery.ToComponentDataArray<Selected>(Allocator.Temp);
-        
-        for (int i = 0; i < selectedEntities.Length; i++)
-        {
-            _entityManager.SetComponentEnabled<Selected>(selectedEntities[i], false);
-            Selected selected = entitiesSelectedComponents[i];
-            selected.OnDeselected = true;
-            
-            _entityManager.SetComponentData(selectedEntities[i], selected);
-        }
-    }
-    
     void LClickStartDrag(InputAction.CallbackContext context)
     {
         _selectionStartMousePos =
             MouseWorldPosition.Instance.PlayerInputActions.Player.MousePosition.ReadValue<Vector2>();
+    }
+    
+    void MousePositionChangePerformed(InputAction.CallbackContext context)
+    {
+        _mousePosition = context.ReadValue<Vector2>();
     }
     
     void LClickPerformedDrag(InputAction.CallbackContext context)
@@ -91,7 +70,27 @@ public class UnitSelectionManager : MonoBehaviour
             BoxMultiSelect();
         }
     }
+    
+    private void DeselectAll()
+    {
+        // Deselect All
+        EntityQuery entityQuery = new EntityQueryBuilder(Allocator.Temp)
+            .WithAll<Selected>()
+            .Build(_entityManager);
 
+        NativeArray<Entity> selectedEntities = entityQuery.ToEntityArray(Allocator.Temp);
+        NativeArray<Selected> entitiesSelectedComponents = entityQuery.ToComponentDataArray<Selected>(Allocator.Temp);
+        
+        for (int i = 0; i < selectedEntities.Length; i++)
+        {
+            _entityManager.SetComponentEnabled<Selected>(selectedEntities[i], false);
+            Selected selected = entitiesSelectedComponents[i];
+            selected.OnDeselected = true;
+            
+            _entityManager.SetComponentData(selectedEntities[i], selected);
+        }
+    }
+    
     private void ClickSelectOrMoveCommand()
     {
         EntityQuery physicsWorldSingletonQuery = _entityManager.CreateEntityQuery(typeof(PhysicsWorldSingleton));
@@ -128,18 +127,18 @@ public class UnitSelectionManager : MonoBehaviour
             MoveOnClickCommand();
         }
     }
-
+    
     private void MoveOnClickCommand()
     {
         EntityQuery entityQuery = new EntityQueryBuilder(Allocator.Temp).WithAll<UnitMover, Selected>()
             .Build(World.DefaultGameObjectInjectionWorld.EntityManager);
-                
+        
         NativeArray<Entity> entityUnits = entityQuery.ToEntityArray(Allocator.Temp);
         if (entityUnits.Length < 1)
             return;
         
         NativeArray<UnitMover> unitMoverArray = entityQuery.ToComponentDataArray<UnitMover>(Allocator.Temp);
-
+        
         NativeArray<float3> positions = ArrangeUnitsInRings(
             MouseWorldPosition.Instance.GetPosition(),
             unitMoverArray.Length,
