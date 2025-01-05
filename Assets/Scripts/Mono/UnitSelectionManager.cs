@@ -6,64 +6,82 @@ using Unity.Physics;
 using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using RaycastHit = Unity.Physics.RaycastHit;
 
 public class UnitSelectionManager : MonoBehaviour
 {
+    public PlayerInput playerInput;
+    
     public static UnitSelectionManager Instance { get; private set; }
     
-    public int unitLayer;
+    public int playerTeam;
+    public int player;
+    
+    public event EventHandler OnSelectionAreaStart;
+    public event EventHandler OnSelectionAreaEnd;
+    public event EventHandler<NativeArray<Entity>> OnUnitsSelected;
 
+    public Camera playerCamera;
+    private bool _dragging;
+    private Vector2 _selectionStartMousePos;
+    
+    private EntityManager EntityManager => World.DefaultGameObjectInjectionWorld.EntityManager;
+    
     private void Awake()
     {
         Instance = this;
+        playerInput = PlayerInput.Instance;
+        playerCamera = Camera.main;
     }
 
-    public event EventHandler OnSelectionAreaStart;
-    public event EventHandler OnSelectionAreaEnd;
-    
-    bool _dragging;
-    private Vector2 _selectionStartMousePos;
-    private Vector2 _mousePosition;
-    
-    private EntityManager _entityManager;
-
-    void Start()
+    private void OnEnable()
     {
-        _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-
-        MouseWorldPosition.Instance.PlayerInputActions.Player.LClickDrag.started += LClickStartDrag;
-        MouseWorldPosition.Instance.PlayerInputActions.Player.LClickDrag.performed += LClickPerformedDrag;
-        MouseWorldPosition.Instance.PlayerInputActions.Player.LClickDrag.canceled += LClickCanceledDrag;
-
-        MouseWorldPosition.Instance.PlayerInputActions.Player.MousePosition.performed += MousePositionChangePerformed;
+        playerInput.PlayerInputActions.Player.LClickDrag.started += LClickStartDrag;
+        playerInput.PlayerInputActions.Player.LClickDrag.performed += LClickPerformedDrag;
+        playerInput.PlayerInputActions.Player.LClickDrag.canceled += LClickCanceledDrag;
+        playerInput.PlayerInputActions.Player.RClick.canceled += RClickCanceled;
     }
-    
-    void LClickStartDrag(InputAction.CallbackContext context)
+
+    private void OnDisable()
+    {
+        playerInput.PlayerInputActions.Player.LClickDrag.started -= LClickStartDrag;
+        playerInput.PlayerInputActions.Player.LClickDrag.performed -= LClickPerformedDrag;
+        playerInput.PlayerInputActions.Player.LClickDrag.canceled -= LClickCanceledDrag;
+        playerInput.PlayerInputActions.Player.RClick.canceled -= RClickCanceled;
+    }
+
+    private void RClickCanceled(InputAction.CallbackContext obj)
+    {
+        DeselectAll();
+        OnUnitsSelected?.Invoke(null, new NativeArray<Entity>(0, Allocator.Temp));
+    }
+
+    private void LClickStartDrag(InputAction.CallbackContext context)
     {
         _selectionStartMousePos =
-            MouseWorldPosition.Instance.PlayerInputActions.Player.MousePosition.ReadValue<Vector2>();
+            playerInput.PlayerInputActions.Player.MousePosition.ReadValue<Vector2>();
     }
-    
-    void MousePositionChangePerformed(InputAction.CallbackContext context)
-    {
-        _mousePosition = context.ReadValue<Vector2>();
-    }
-    
-    void LClickPerformedDrag(InputAction.CallbackContext context)
+
+    private void LClickPerformedDrag(InputAction.CallbackContext context)
     {
         if (Vector2.Distance(_selectionStartMousePos,
-                MouseWorldPosition.Instance.PlayerInputActions.Player.MousePosition.ReadValue<Vector2>()) >= 30f)
+                playerInput.PlayerInputActions.Player.MousePosition.ReadValue<Vector2>()) >= 30f)
         {
             OnSelectionAreaStart?.Invoke(this, EventArgs.Empty);
             _dragging = true;
         }
     }
-    
-    void LClickCanceledDrag(InputAction.CallbackContext context)
+
+    private void LClickCanceledDrag(InputAction.CallbackContext context)
     {
         if (!_dragging)
         {
-            ClickSelectOrMoveCommand();
+            if (playerInput.isPointerOverUI)
+            {
+                return;
+            }
+            
+            OnClickAction();
         }
         else
         {
@@ -76,27 +94,27 @@ public class UnitSelectionManager : MonoBehaviour
         // Deselect All
         EntityQuery entityQuery = new EntityQueryBuilder(Allocator.Temp)
             .WithAll<Selected>()
-            .Build(_entityManager);
+            .Build(EntityManager);
 
         NativeArray<Entity> selectedEntities = entityQuery.ToEntityArray(Allocator.Temp);
         NativeArray<Selected> entitiesSelectedComponents = entityQuery.ToComponentDataArray<Selected>(Allocator.Temp);
         
         for (int i = 0; i < selectedEntities.Length; i++)
         {
-            _entityManager.SetComponentEnabled<Selected>(selectedEntities[i], false);
+            EntityManager.SetComponentEnabled<Selected>(selectedEntities[i], false);
             Selected selected = entitiesSelectedComponents[i];
             selected.OnDeselected = true;
             
-            _entityManager.SetComponentData(selectedEntities[i], selected);
+            EntityManager.SetComponentData(selectedEntities[i], selected);
         }
     }
     
-    private void ClickSelectOrMoveCommand()
+    private void OnClickAction()
     {
-        EntityQuery physicsWorldSingletonQuery = _entityManager.CreateEntityQuery(typeof(PhysicsWorldSingleton));
+        EntityQuery physicsWorldSingletonQuery = EntityManager.CreateEntityQuery(typeof(PhysicsWorldSingleton));
         PhysicsWorldSingleton physicsWorldSingleton = physicsWorldSingletonQuery.GetSingleton<PhysicsWorldSingleton>();
             
-        UnityEngine.Ray cameraRay = Camera.main!.ScreenPointToRay(MouseWorldPosition.Instance.PlayerInputActions.Player.MousePosition.ReadValue<Vector2>());
+        UnityEngine.Ray cameraRay = playerCamera.ScreenPointToRay(playerInput.PlayerInputActions.Player.MousePosition.ReadValue<Vector2>());
             
         RaycastInput raycastInput = new RaycastInput
         {
@@ -105,53 +123,58 @@ public class UnitSelectionManager : MonoBehaviour
             Filter = new CollisionFilter
             {
                 BelongsTo = ~0u,
-                CollidesWith = 1u << unitLayer,
+                CollidesWith = 1u << Assets.UNITS_LAYER,
                 GroupIndex = 0
             }
         };
-            
-        if (physicsWorldSingleton.CollisionWorld.CastRay(raycastInput, out Unity.Physics.RaycastHit hit)
-            && _entityManager.HasComponent<Unit>(hit.Entity))
+        
+        if (physicsWorldSingleton.CollisionWorld.CastRay(raycastInput, out RaycastHit hit)
+            && EntityManager.HasComponent<Unit>(hit.Entity))
         {
-            DeselectAll();
-            _entityManager.SetComponentEnabled<Selected>(hit.Entity, true);
+            EntityQuery entityQuery = new EntityQueryBuilder(Allocator.Temp).WithAll<Unit, Selected>()
+                .Build(EntityManager);
             
-            Selected selected = _entityManager.GetComponentData<Selected>(hit.Entity);
-            selected.OnSelected = true;
-            selected.OnDeselected = false;
+            NativeArray<Entity> entityUnits = entityQuery.ToEntityArray(Allocator.Temp);
             
-            _entityManager.SetComponentData(hit.Entity, selected);
+            Unit unit = EntityManager.GetComponentData<Unit>(hit.Entity);
+            
+            if (unit.Team != playerTeam && unit.Team != Assets.Neutral && entityUnits.Length > 0)
+            {
+                // Attack
+                Debug.Log("Attack Enemy");
+            }
+            else if (unit.Owner == player)
+            {
+                SingleSelect(hit);
+            }
+            else
+            {
+                // Show highlight info
+                Debug.Log("Show Highlight Info");
+            }
         }
         else
         {
             MoveOnClickCommand();
         }
     }
-    
-    private void MoveOnClickCommand()
-    {
-        EntityQuery entityQuery = new EntityQueryBuilder(Allocator.Temp).WithAll<UnitMover, Selected>()
-            .Build(World.DefaultGameObjectInjectionWorld.EntityManager);
-        
-        NativeArray<Entity> entityUnits = entityQuery.ToEntityArray(Allocator.Temp);
-        if (entityUnits.Length < 1)
-            return;
-        
-        NativeArray<UnitMover> unitMoverArray = entityQuery.ToComponentDataArray<UnitMover>(Allocator.Temp);
-        
-        NativeArray<float3> positions = ArrangeUnitsInRings(
-            MouseWorldPosition.Instance.GetPosition(),
-            unitMoverArray.Length,
-            _entityManager.GetComponentData<LocalTransform>(entityUnits[0]).Scale);
-                
-        for (int i = 0; i < unitMoverArray.Length; i++)
-        {
-            UnitMover unitMover = unitMoverArray[i];
-            unitMover.TargetPosition = positions[i];
-            unitMoverArray[i] = unitMover;
-        }
 
-        entityQuery.CopyFromComponentDataArray(unitMoverArray);
+    private void SingleSelect(RaycastHit hit)
+    {
+        DeselectAll();
+        
+        EntityManager.SetComponentEnabled<Selected>(hit.Entity, true);
+        
+        Selected selected = EntityManager.GetComponentData<Selected>(hit.Entity);
+        selected.OnSelected = true;
+        // selected.OnDeselected = false;
+        
+        EntityManager.SetComponentData(hit.Entity, selected);
+        
+        NativeArray<Entity> entities = new NativeArray<Entity>(1, Allocator.Temp);
+        entities[0] = hit.Entity;
+        
+        OnUnitsSelected?.Invoke(this, entities);
     }
 
     private void BoxMultiSelect()
@@ -161,45 +184,82 @@ public class UnitSelectionManager : MonoBehaviour
         EntityQuery entityQuery = new EntityQueryBuilder(Allocator.Temp)
             .WithAll<LocalTransform, Unit>()
             .WithPresent<Selected>()
-            .Build(_entityManager);
+            .Build(EntityManager);
                 
         // Select what is inside the rect
         NativeArray<Entity> entityUnits = entityQuery.ToEntityArray(Allocator.Temp);
         NativeArray<LocalTransform> localTransformArray =
             entityQuery.ToComponentDataArray<LocalTransform>(Allocator.Temp);
 
+        NativeList<Entity> entities = new NativeList<Entity>(Allocator.Temp);
+        
         Rect selectionArea = GetSelectionArea();
         for (int i = 0; i < localTransformArray.Length; i++)
         {
             LocalTransform unitLocalTransform = localTransformArray[i];
-            Vector2 unitScreenPos = Camera.main!.WorldToScreenPoint(unitLocalTransform.Position);
+            Vector2 unitScreenPos = playerCamera.WorldToScreenPoint(unitLocalTransform.Position);
+            
             if (selectionArea.Contains(unitScreenPos))
             {
-                World.DefaultGameObjectInjectionWorld.EntityManager.SetComponentEnabled<Selected>(entityUnits[i],
-                    true);
+                EntityManager.SetComponentEnabled<Selected>(entityUnits[i], true);
                 
-                Selected selected = _entityManager.GetComponentData<Selected>(entityUnits[i]);
+                Selected selected = EntityManager.GetComponentData<Selected>(entityUnits[i]);
                 selected.OnSelected = true;
-                selected.OnDeselected = false;
-            
-                _entityManager.SetComponentData(entityUnits[i], selected);
+                // selected.OnDeselected = false;
+                
+                EntityManager.SetComponentData(entityUnits[i], selected);
+                
+                entities.Add(entityUnits[i]);
             }
         }
 
         OnSelectionAreaEnd?.Invoke(this, EventArgs.Empty);
+        OnUnitsSelected?.Invoke(this, entities.AsArray());
+        
         _dragging = false;
+    }
+    
+    private void MoveOnClickCommand()
+    {
+        EntityQuery entityQuery = new EntityQueryBuilder(Allocator.Temp).WithAll<UnitMover, Selected>()
+            .Build(EntityManager);
+        
+        NativeArray<Entity> entityUnits = entityQuery.ToEntityArray(Allocator.Temp);
+        if (entityUnits.Length < 1)
+            return;
+        
+        NativeArray<UnitMover> unitMoverArray = entityQuery.ToComponentDataArray<UnitMover>(Allocator.Temp);
+
+        Vector3 clickPosition = playerInput.GetPosition();
+        
+        if (clickPosition == Vector3.zero)
+            return;
+        
+        NativeArray<float3> positions = MathematicalUtils.ArrangeUnitsInRings(
+            clickPosition,
+            unitMoverArray.Length,
+            EntityManager.GetComponentData<LocalTransform>(entityUnits[0]).Scale);
+                
+        for (int i = 0; i < unitMoverArray.Length; i++)
+        {
+            UnitMover unitMover = unitMoverArray[i];
+            unitMover.TargetPosition = positions[i];
+            unitMoverArray[i] = unitMover;
+        }
+        
+        entityQuery.CopyFromComponentDataArray(unitMoverArray);
     }
     
     public Rect GetSelectionArea()
     {
         Vector2 lowerLeftCorner = new Vector2(
-            Mathf.Min(_selectionStartMousePos.x, _mousePosition.x),
-            Mathf.Min(_selectionStartMousePos.y, _mousePosition.y)
+            Mathf.Min(_selectionStartMousePos.x, playerInput.mousePosition.x),
+            Mathf.Min(_selectionStartMousePos.y, playerInput.mousePosition.y)
         );
         
         Vector2 upperRightCorner = new Vector2(
-            Mathf.Max(_selectionStartMousePos.x, _mousePosition.x),
-            Mathf.Max(_selectionStartMousePos.y, _mousePosition.y)
+            Mathf.Max(_selectionStartMousePos.x, playerInput.mousePosition.x),
+            Mathf.Max(_selectionStartMousePos.y, playerInput.mousePosition.y)
         );
         
         return new Rect(
@@ -208,74 +268,4 @@ public class UnitSelectionManager : MonoBehaviour
             upperRightCorner.x - lowerLeftCorner.x, 
             upperRightCorner.y - lowerLeftCorner.y);
     }
-    
-    /// <summary>
-    /// Arranges units: first one at the center (targetPosition), then subsequent units in concentric rings.
-    /// Each ring is placed to avoid overlap, with a margin around each unit and each ring.
-    /// </summary>
-    /// <param name="targetPosition">The center position where the first unit goes.</param>
-    /// <param name="count">Total number of units to place (including the center one).</param>
-    /// <param name="unitSize">The diameter of each unit's footprint.</param>
-    /// <param name="allocator">Memory allocator for the NativeArray.</param>
-    /// <returns>A NativeArray of float3 positions for the units.</returns>
-    public NativeArray<float3> ArrangeUnitsInRings(float3 targetPosition, int count, float unitSize, Allocator allocator = Allocator.Temp)
-    {
-        if (count <= 0)
-            return new NativeArray<float3>(0, allocator);
-
-        // We'll store all positions
-        var positions = new NativeArray<float3>(count, allocator);
-
-        // Place the first unit at the center
-        positions[0] = targetPosition;
-        if (count == 1)
-            return positions; // Only one unit requested
-
-        int unitsPlaced = 1;
-        int unitsLeft = count - 1;
-
-        // Margins and spacing calculations
-        float ringMargin = unitSize * 0.5f;    // Margin added between rings
-        float unitSpacing = unitSize * 1.5f;   // Each unit on the ring needs unitSize + 0.2*unitSize = 1.2 * unitSize of circumference space
-
-        // Calculate the first ring radius:
-        // first ring radius = center unit radius + ring unit radius + ring margin = 0.5*unitSize + 0.5*unitSize + 0.5*unitSize = 1.5 * unitSize
-        float ringRadius = 1.5f * unitSize;
-
-        // Place remaining units in rings
-        while (unitsLeft > 0)
-        {
-            float circumference = 2f * math.PI * ringRadius;
-            int unitsOnThisRing = (int)math.floor(circumference / unitSpacing);
-
-            // Ensure at least one unit can be placed
-            if (unitsOnThisRing < 1)
-                unitsOnThisRing = 1;
-
-            // If we have fewer units left than fits on the ring, adjust
-            if (unitsOnThisRing > unitsLeft)
-                unitsOnThisRing = unitsLeft;
-
-            float angleStep = 2f * math.PI / unitsOnThisRing;
-
-            // Place units evenly on this ring
-            for (int i = 0; i < unitsOnThisRing; i++)
-            {
-                float angle = i * angleStep;
-                float x = targetPosition.x + ringRadius * math.cos(angle);
-                float z = targetPosition.z + ringRadius * math.sin(angle);
-                // Keep the same Y as the target position
-                positions[unitsPlaced] = new float3(x, targetPosition.y, z);
-                unitsPlaced++;
-                unitsLeft--;
-            }
-
-            // Increase radius for the next ring:
-            // next ring radius increment = unitSize + ringMargin
-            ringRadius += (unitSize + ringMargin);
-        }
-
-        return positions;
-    }
-    
 }
