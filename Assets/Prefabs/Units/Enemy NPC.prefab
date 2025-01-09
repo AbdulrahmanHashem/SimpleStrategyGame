@@ -8,6 +8,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1146860447263624904, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
+      propertyPath: range
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 1146860447263624904, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
+      propertyPath: maxTime
+      value: 0.2
+      objectReference: {fileID: 0}
     - target: {fileID: 3791126118778366914, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
       propertyPath: range
       value: 2
@@ -16,6 +24,14 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 260db50d0451d354b9fb5b2311257d52, type: 2}
+    - target: {fileID: 5370982300510349219, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
+      propertyPath: moveSpeed
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5370982300510349219, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
+      propertyPath: rotateSpeed
+      value: 15
+      objectReference: {fileID: 0}
     - target: {fileID: 6814294987138808047, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
       propertyPath: m_Name
       value: Enemy NPC
@@ -71,6 +87,14 @@ PrefabInstance:
     - target: {fileID: 7413713010568189258, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8588392708106395349, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
+      propertyPath: team
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8588392708106395349, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
+      propertyPath: owner
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

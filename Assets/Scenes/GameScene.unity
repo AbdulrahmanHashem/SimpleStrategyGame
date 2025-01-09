@@ -166,9 +166,9 @@ MonoBehaviour:
   settings: {fileID: 4769486607631908782, guid: 151c6e6eed9bdec4c9b0c7c7f119d633, type: 3}
   gameAssets: {fileID: 2588721857121737358, guid: 49f04e4fdd5ac034fa200188912abfbf, type: 3}
   playerInput: {fileID: 7993422617985160684, guid: cd9af8ae25a26b441ac0afc0118857e1, type: 3}
+  playerCameraController: {fileID: 8760916887818880726, guid: 8d19865f4f650e149a65d982976b4bf1, type: 3}
   unitSelectionManager: {fileID: 6858798776561335645, guid: fe34a1f3d503a4c4e90efa061ff9e4ae, type: 3}
   gameUICanvas: {fileID: 8584808604267095701, guid: 40d712457bb434c499d76d870d2e7a27, type: 3}
-  playerCameraController: {fileID: 8760916887818880726, guid: 8d19865f4f650e149a65d982976b4bf1, type: 3}
   environment: {fileID: 8140474648689827601, guid: e7aeaabb5b7dacf4baacad637c72ccb5, type: 3}
 --- !u!1 &1311026363
 GameObject:

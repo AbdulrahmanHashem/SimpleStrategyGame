@@ -198,7 +198,7 @@ Transform:
   m_GameObject: {fileID: 3489407912455669989}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.06, z: 0}
+  m_LocalPosition: {x: 0, y: 1.45, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -347,14 +347,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7413713010568189258}
-  - component: {fileID: 6938391369499369811}
-  - component: {fileID: 5508035705713214889}
-  - component: {fileID: 5347157675197552506}
-  - component: {fileID: 3791126118778366914}
-  - component: {fileID: 7366252728557416891}
+  - component: {fileID: 8588392708106395349}
+  - component: {fileID: 5399814845608083841}
+  - component: {fileID: 5370982300510349219}
+  - component: {fileID: 1146860447263624904}
+  - component: {fileID: 6678710663872426197}
   - component: {fileID: 7108664243749985246}
   - component: {fileID: 156848728023863750}
-  - component: {fileID: -4178895583545853364}
+  - component: {fileID: 4983802863956748191}
   m_Layer: 6
   m_Name: BaseUnit
   m_TagString: Untagged
@@ -380,7 +380,7 @@ Transform:
   - {fileID: 3441812950207521284}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6938391369499369811
+--- !u!114 &8588392708106395349
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -394,7 +394,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   team: 0
   owner: 0
---- !u!114 &5508035705713214889
+--- !u!114 &5399814845608083841
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -409,7 +409,7 @@ MonoBehaviour:
   healthAmount: 100
   maxHealthAmount: 100
   centerOfMass: {fileID: 1877236381858274039}
---- !u!114 &5347157675197552506
+--- !u!114 &5370982300510349219
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -421,13 +421,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 013a0b9f52d084b46a29d52bf747e2f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 2
-  rotateSpeed: 15
+  moveSpeed: 1
+  rotateSpeed: 1
   targetPosition:
     x: 0
     y: 0
     z: 0
---- !u!114 &3791126118778366914
+--- !u!114 &1146860447263624904
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -440,8 +440,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   range: 0
-  maxTime: 0.2
---- !u!114 &7366252728557416891
+  maxTime: 0
+--- !u!114 &6678710663872426197
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -504,7 +504,7 @@ CapsuleCollider:
   m_Height: 1.71
   m_Direction: 1
   m_Center: {x: 0, y: 0.9, z: 0}
---- !u!114 &-4178895583545853364
+--- !u!114 &4983802863956748191
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

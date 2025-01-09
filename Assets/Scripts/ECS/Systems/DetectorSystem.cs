@@ -1,6 +1,7 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
 
@@ -18,35 +19,37 @@ partial struct DetectorSystem : ISystem
     {
         PhysicsWorldSingleton physicsWorldSingleton = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
         CollisionWorld collisionWorld = physicsWorldSingleton.CollisionWorld;
-        
+
         NativeList<DistanceHit> distanceHits = new NativeList<DistanceHit>(Allocator.Temp);
         foreach (
             (
                 RefRO<LocalTransform> localTransform,
-                RefRW<Detector> findTarget,
+                RefRW<Detector> detector,
                 RefRW<Unit> unit,
-                RefRW<Target> target
+                RefRW<Target> target,
+                RefRO<ShootAttack> shootAttack
             )
             in SystemAPI.Query<
                 RefRO<LocalTransform>,
                 RefRW<Detector>,
                 RefRW<Unit>,
-                RefRW<Target>>()
+                RefRW<Target>,
+                RefRO<ShootAttack>>()
             )
         {
-            findTarget.ValueRW.Time -= SystemAPI.Time.DeltaTime;
-            
-            if (findTarget.ValueRW.Time > 0)
-            {
+            detector.ValueRW.Time -= SystemAPI.Time.DeltaTime;
+
+            if (detector.ValueRW.Time > 0)
                 continue;
-            }
-            findTarget.ValueRW.Time = findTarget.ValueRW.MaxTime;
-            
+
+            detector.ValueRW.Time = detector.ValueRW.MaxTime;
+
             distanceHits.Clear();
+
             if (collisionWorld.OverlapSphere
                 (
                     localTransform.ValueRO.Position,
-                    findTarget.ValueRO.Range,
+                    detector.ValueRO.Range,
                     ref distanceHits,
                     new CollisionFilter
                     {
@@ -58,20 +61,32 @@ partial struct DetectorSystem : ISystem
             {
                 foreach (DistanceHit distanceHit in distanceHits)
                 {
-                    if (SystemAPI.Exists(distanceHit.Entity) ||
-                        SystemAPI.HasComponent<LocalTransform>(distanceHit.Entity))
+                    if (SystemAPI.Exists(distanceHit.Entity) &&
+                        SystemAPI.HasComponent<LocalTransform>(distanceHit.Entity) &&
+                        SystemAPI.HasComponent<Unit>(distanceHit.Entity))
                     {
                         Unit detectedUnit = SystemAPI.GetComponent<Unit>(distanceHit.Entity);
 
                         if (detectedUnit.Team != unit.ValueRO.Team && detectedUnit.Team != Assets.Neutral)
                         {
-                            // Valid Target
+                            RefRO<LocalTransform> distanceHitLocalTransform = SystemAPI.GetComponentRO<LocalTransform>(distanceHit.Entity);
+
+                            if (SystemAPI.Exists(target.ValueRW.TargetEntity) && SystemAPI.HasComponent<Unit>(target.ValueRW.TargetEntity))
+                            {
+                                RefRO<LocalTransform> targetLocalTransform = SystemAPI.GetComponentRO<LocalTransform>(target.ValueRW.TargetEntity);
+
+                                if (math.distance(distanceHitLocalTransform.ValueRO.Position, localTransform.ValueRO.Position)
+                                >= math.distance(targetLocalTransform.ValueRO.Position, localTransform.ValueRO.Position))
+                                {
+                                    continue;
+                                }
+                            }
+
                             target.ValueRW.TargetEntity = distanceHit.Entity;
                         }
                     }
                 }
             }
         }
-        
     }
 }

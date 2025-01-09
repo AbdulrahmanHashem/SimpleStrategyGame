@@ -47,8 +47,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 20a396411b08c804e88e4fc68b0e9732, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 20
-  damageAmount: 0
+  speed: 15
+  damageAmount: 5
+  maxRange: 20
+  explosionRadius: 0.1
 --- !u!114 &5336876242151514092
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -188,8 +190,8 @@ Transform:
   m_GameObject: {fileID: 6018637519947782039}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: -0.1684, z: 0}
-  m_LocalScale: {x: 12.613276, y: 12.613276, z: 12.613276}
+  m_LocalPosition: {x: 0, y: -0.284, z: 0}
+  m_LocalScale: {x: 21.801437, y: 21.801437, z: 21.801437}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3954068946148668181}

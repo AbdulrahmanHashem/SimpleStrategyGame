@@ -258,7 +258,7 @@ Transform:
   m_GameObject: {fileID: 8760916887818880726}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 20, z: -22}
+  m_LocalPosition: {x: 0, y: 37, z: -54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -278,4 +278,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 8760916887818880726}
-  playerCamera: {fileID: 300351892577963329}
+  playerInput: {fileID: 0}

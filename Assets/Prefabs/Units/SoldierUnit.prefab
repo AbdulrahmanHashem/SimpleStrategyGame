@@ -129,9 +129,17 @@ PrefabInstance:
       propertyPath: m_Radius
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 1146860447263624904, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
+      propertyPath: range
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 1146860447263624904, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
+      propertyPath: maxTime
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 3791126118778366914, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
       propertyPath: range
-      value: 5
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 3843299896767053755, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -140,6 +148,14 @@ PrefabInstance:
     - target: {fileID: 5347157675197552506, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
       propertyPath: moveSpeed
       value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5370982300510349219, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
+      propertyPath: moveSpeed
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5370982300510349219, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
+      propertyPath: rotateSpeed
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 6814294987138808047, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
       propertyPath: m_Name
@@ -197,6 +213,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8588392708106395349, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
+      propertyPath: team
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8588392708106395349, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
+      propertyPath: owner
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -212,7 +236,7 @@ PrefabInstance:
       addedObject: {fileID: 8947546258246948869}
     - targetCorrespondingSourceObject: {fileID: 6814294987138808047, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
       insertIndex: 6
-      addedObject: {fileID: 6264193050965699926}
+      addedObject: {fileID: 5860147673762065749}
   m_SourcePrefab: {fileID: 100100000, guid: 71ca4b1d57b05194db61355eec495adf, type: 3}
 --- !u!1 &5213578764177268896 stripped
 GameObject:
@@ -233,7 +257,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   visualEntity: {fileID: 3150579601126413961}
   showScale: 1
---- !u!114 &6264193050965699926
+--- !u!114 &5860147673762065749
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -246,8 +270,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   timerMax: 0.2
-  attackDistance: 5
-  damage: 5
+  attackDistance: 10
   bulletStartPositionTransform: {fileID: 7509034522736287013}
 --- !u!4 &8082179953144597765 stripped
 Transform:

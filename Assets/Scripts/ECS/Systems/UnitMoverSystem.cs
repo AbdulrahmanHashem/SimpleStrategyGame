@@ -24,12 +24,12 @@ public partial struct UnitMoverJop : IJobEntity
     
     public void Execute(
         ref LocalTransform localTransform, 
-        in UnitMover unitMover, 
+        in UnitMover unitMover,
         ref PhysicsVelocity physicsVelocity)
     {
         float3 moveDirection = unitMover.TargetPosition - localTransform.Position;
-
-        float reachedTargetDistance = .2f;
+        
+        float reachedTargetDistance = 0.2f;
         if (math.lengthsq(moveDirection) < reachedTargetDistance)
         {
             physicsVelocity.Linear = float3.zero;
@@ -44,7 +44,7 @@ public partial struct UnitMoverJop : IJobEntity
                 localTransform.Rotation, 
                 quaternion.LookRotation(moveDirection, math.up()), 
                 DeltaTime * unitMover.RotateSpeed);
-            
+        
         physicsVelocity.Linear = moveDirection * unitMover.MoveSpeed;
         physicsVelocity.Angular = float3.zero;
     }
